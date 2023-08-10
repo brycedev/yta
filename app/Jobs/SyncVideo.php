@@ -75,5 +75,6 @@ class SyncVideo implements ShouldQueue
             $this->sync->channel->getFreshVideos();
             $this->fail();
         }
+        Storage::disk('local')->deleteDirectory($directory);
     }
 }

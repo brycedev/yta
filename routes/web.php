@@ -14,6 +14,7 @@ Route::group(['middleware' => 'guest'], function () {
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/channels/verify', [ChannelController::class, 'verify'])->name('channel.verify');
     Route::post('/channels', [ChannelController::class, 'store'])->name('channel.store');
     Route::put('/channels', [ChannelController::class, 'update'])->name('channel.update');
     Route::post('/channels/refresh', [ChannelController::class, 'refresh'])->name('channel.refresh');

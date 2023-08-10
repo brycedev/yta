@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { router, useForm } from "@inertiajs/react";
 import { Fragment, useState } from "react";
 
@@ -61,9 +61,10 @@ function DeleteActiveIcon(props) {
 }
 
 export default function Dashboard({ auth, channel, syncs }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing } = useForm({
         url: "",
     });
+    const { errors } = usePage().props;
     const [step, setStep] = useState(1);
     const [verifying, setVerifying] = useState(false);
     const hasChannel = typeof channel !== "undefined" && channel !== null;
@@ -71,7 +72,7 @@ export default function Dashboard({ auth, channel, syncs }) {
         hasChannel && typeof channel !== "undefined" && channel.verified;
     function submitChannelForm(e) {
         e.preventDefault();
-        post("/channels", {
+        post("/channels/verify", {
             onSuccess: () => {
                 setStep(2);
             },
@@ -82,11 +83,10 @@ export default function Dashboard({ auth, channel, syncs }) {
             return;
         }
         setVerifying(true);
-        router.post("/channels/verify", {
-            onSuccess: () => {
-                setVerifying(false);
-            },
+        router.post("/channels", {
+            url: data.url,
         });
+        setVerifying(false);
     }
     function refreshFeed(e) {
         e.preventDefault();
@@ -130,7 +130,7 @@ export default function Dashboard({ auth, channel, syncs }) {
 
             <main className="lg:pl-72 h-screen">
                 <div className="xl:pr-72">
-                    {!hasChannel && !verified && (
+                    {!hasChannel && (
                         <>
                             <div className="h-screen">
                                 <div className="flex flex-col items-center justify-center h-full">
@@ -198,7 +198,7 @@ export default function Dashboard({ auth, channel, syncs }) {
                                                                         .value
                                                                 )
                                                             }
-                                                            id="podcast-url"
+                                                            id="youtube-url"
                                                             name="url"
                                                             type="url"
                                                             value={data.url}
@@ -223,17 +223,22 @@ export default function Dashboard({ auth, channel, syncs }) {
                                                 </div>
                                             )}
                                             {step == 2 && (
-                                                <div className="mt-4 flex items-center justify-center">
-                                                    <button
-                                                        onClick={() =>
-                                                            verifyChannel()
-                                                        }
-                                                        disabled={verifying}
-                                                        class="cursor-pointer rounded-md bg-audius-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-audius-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-audius-600"
-                                                    >
-                                                        Verify channel
-                                                    </button>
-                                                </div>
+                                                <>
+                                                    <div className="mt-4 flex items-center justify-center">
+                                                        <button
+                                                            onClick={() =>
+                                                                verifyChannel()
+                                                            }
+                                                            disabled={verifying}
+                                                            className="cursor-pointer rounded-md bg-audius-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-audius-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-audius-600"
+                                                        >
+                                                            Verify channel
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-sm text-red-500 font-semibold mt-4">
+                                                        {errors.url}
+                                                    </p>
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -241,7 +246,7 @@ export default function Dashboard({ auth, channel, syncs }) {
                             </div>
                         </>
                     )}
-                    {hasChannel && verified && (
+                    {hasChannel && (
                         <div className="">
                             {/* Page title & actions */}
                             <div className="border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
