@@ -16,11 +16,10 @@ return new class () extends Migration {
         Schema::create('syncs', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->integer('channel_id')->refereences('id')->on('podcasts')->onDelete('cascade');
+            $table->integer('channel_id')->refereences('id')->on('channels')->onDelete('cascade');
             $table->string('guid');
             $table->text('title');
             $table->text('image')->nullable();
-            $table->text('source');
             $table->string('audius_url')->nullable();
             $table->enum('status', ['queued', 'syncing', 'synced', 'failed'])->default('queued');
             $table->boolean('automated')->default(false);

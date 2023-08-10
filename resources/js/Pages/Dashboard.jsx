@@ -3,11 +3,7 @@ import { Head, usePage } from "@inertiajs/react";
 import { router, useForm } from "@inertiajs/react";
 import { Fragment, useState } from "react";
 
-import {
-    ArrowRightIcon,
-    ChevronRightIcon,
-    Cog8ToothIcon,
-} from "@heroicons/react/20/solid";
+import { ArrowRightIcon, Cog8ToothIcon } from "@heroicons/react/20/solid";
 import { Menu, Transition, Switch } from "@headlessui/react";
 
 function classNames(...classes) {
@@ -68,8 +64,6 @@ export default function Dashboard({ auth, channel, syncs }) {
     const [step, setStep] = useState(1);
     const [verifying, setVerifying] = useState(false);
     const hasChannel = typeof channel !== "undefined" && channel !== null;
-    const verified =
-        hasChannel && typeof channel !== "undefined" && channel.verified;
     function submitChannelForm(e) {
         e.preventDefault();
         post("/channels/verify", {
@@ -108,7 +102,6 @@ export default function Dashboard({ auth, channel, syncs }) {
         let payload = {
             channel_id: channel.id,
             title: video.title,
-            source: video.source,
             image: video.image,
             guid: video.guid,
         };
@@ -393,7 +386,7 @@ export default function Dashboard({ auth, channel, syncs }) {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 bg-white">
-                                            {channel.items.map((video) => (
+                                            {channel.videos.map((video) => (
                                                 <tr key={video.guid}>
                                                     <td className="w-full max-w-0 whitespace-nowrap px-6 py-3 text-sm font-medium text-gray-900">
                                                         <div className="flex items-center space-x-3 lg:pl-2">

@@ -11,7 +11,7 @@ class Channel extends Model
 {
     use HasFactory;
 
-    protected $appends = ['items'];
+    protected $appends = ['videos'];
     protected $guarded = [];
 
     public function user()
@@ -40,18 +40,30 @@ class Channel extends Model
                 $id = str_replace('yt:video:', '', $entry->id->__toString());
                 $namespaces = $entry->getNameSpaces(true);
                 $media = $entry->children($namespaces['media']);
+                $description = $media->group->description->__toString();
                 $thumbnail = $media->group->thumbnail->attributes()->url->__toString();
                 $title = $entry->title->__toString();
                 $published_at = Carbon::createFromFormat('Y-m-d', explode('T', $entry->published->__toString(), 2)[0])->toFormattedDateString();
-                $vid = ['id' => $id, 'title' => $title, 'thumbnail' => $thumbnail, 'published_at' => $published_at];
-                array_push($entires, $vid);
+                $sync = Sync::where('guid', $id)->where('user_id', $this->user->id)->first();
+                $vid = [
+                    'date' => $published_at,
+                    'guid' => $id,
+                    'description' => $description,
+                    'title' => $title,
+                    'image' => $thumbnail,
+                    'tags' => [],
+                    'published_at' => $published_at,
+                    'status' => $sync !== null ? $sync->status : 'unlisted',
+                    'audius_url' => $sync !== null ? $sync->audius_url : '#',
+                ];
+                array_push($entries, $vid);
             }
             return $entries;
         });
         return $items;
     }
 
-    public function getItemsAttribute()
+    public function getVideosAttribute()
     {
         return $this->getVideos();
     }

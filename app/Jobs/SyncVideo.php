@@ -30,51 +30,67 @@ class SyncVideo implements ShouldQueue
 
     public function handle(): void
     {
-        $video = collect($this->sync->channel->items)->firstWhere('guid', $this->sync->guid);
-        $data = json_encode(json_encode([
-            "description" =>  $video['description'],
-            "title" => $video['title'],
-            "tags" => implode(',', $video['tags']),
-            "date" => $video['date'],
-            "image" => $video['image'],
-        ]));
-        $directory = "syncs/{$this->sync->id}";
-        $audio_path = "{$directory}/audio.mp3";
-        $absolute_audio_path = storage_path("app/{$audio_path}");
-        $image_path = "{$directory}/image.jpg";
-        $absolute_image_path = storage_path("app/{$image_path}");
-        Storage::disk('local')->makeDirectory($directory);
-        $this->sync->update(['status' => 'syncing']);
-        $this->sync->channel->getFreshVideos();
-        Storage::disk('local')->put($audio_path, Http::get($this->sync->source)->body());
-        if($this->sync->image == "") {
-            Process::run("ffmpeg -i {$absolute_audio_path} -an -vcodec copy {$absolute_image_path}");
-        } else {
-            Storage::disk('local')->put($image_path, Http::get($this->sync->image)->body());
-        }
-        $audius_sync_path = base_path('audius.ts');
-        $command = "npx tsx {$audius_sync_path} ";
-        $command.= "--user {$this->sync->channel->user->audius_id} ";
-        $command.= "--data {$data} ";
-        $command.= "--audio {$absolute_audio_path} ";
-        if(File::exists($absolute_image_path)) {
-            $command.= "--image {$absolute_image_path} ";
-        }
-
-        Log::info($command);
-        $process = Process::timeout(600)->run($command);
-        Log::info($process->output());
-        if($process->successful()) {
-            $this->sync->update(['status' => 'synced', 'audius_url' => $process->output()]);
+        try {
+            $video = collect($this->sync->channel->videos)->firstWhere('guid', $this->sync->guid);
+            $data = json_encode(json_encode([
+                "description" =>  $video['description'],
+                "title" => $video['title'],
+                "tags" => implode(',', $video['tags']),
+                "date" => $video['date'],
+                "image" => $video['image'],
+            ]));
+            $directory = "syncs/{$this->sync->id}";
+            $audio_path = "{$directory}/audio.wav";
+            $video_audio_path = "{$directory}/video.wav";
+            $absolute_audio_path = storage_path("app/{$audio_path}");
+            $image_path = "{$directory}/image.jpg";
+            $absolute_image_path = storage_path("app/{$image_path}");
+            Storage::disk('local')->makeDirectory($directory);
+            $this->sync->update(['status' => 'syncing']);
             $this->sync->channel->getFreshVideos();
-        }
-        if($process->failed()) {
-            Log::error($process->output());
-            Log::error($process->errorOutput());
+            $youtube_dl_video_path = storage_path("app/{$directory}/video.mp4");
+            $youtube_dl_command = "youtube-dl -x --audio-format wav --output {$youtube_dl_video_path} https://youtube.com/watch?v={$this->sync->guid}";
+            $youtube_dl_process = Process::timeout(600)->run($youtube_dl_command);
+            Log::info($youtube_dl_command);
+            $ffmpeg_command = "ffmpeg -i {$youtube_dl_video_path} -c copy -map 0:a {$absolute_audio_path} -y";
+            Log::info($ffmpeg_command);
+            $ffmpeg_process = Process::timeout(600)->run($ffmpeg_command);
+            if($this->sync->image == "") {
+                Process::run("ffmpeg -i {$absolute_audio_path} -an -vcodec copy {$absolute_image_path}");
+            } else {
+                Storage::disk('local')->put($image_path, Http::get($this->sync->image)->body());
+            }
+            $audius_sync_path = base_path('audius.ts');
+            $command = "npx tsx {$audius_sync_path} ";
+            $command.= "--user {$this->sync->channel->user->audius_id} ";
+            $command.= "--data {$data} ";
+            $path = storage_path("app/{$video_audio_path}");
+            $command.= "--audio {$path} ";
+            if(File::exists($absolute_image_path)) {
+                $command.= "--image {$absolute_image_path} ";
+            }
+
+            Log::info($command);
+            $process = Process::timeout(600)->run($command);
+            Log::info($process->output());
+            if($process->successful()) {
+                $this->sync->update(['status' => 'synced', 'audius_url' => $process->output()]);
+                $this->sync->channel->getFreshVideos();
+            }
+            if($process->failed()) {
+                Log::error($process->output());
+                Log::error($process->errorOutput());
+                $this->sync->update(['status' => 'failed']);
+                $this->sync->channel->getFreshVideos();
+                $this->fail();
+            }
+            // Storage::disk('local')->deleteDirectory($directory);
+        } catch (\Throwable $th) {
             $this->sync->update(['status' => 'failed']);
             $this->sync->channel->getFreshVideos();
-            $this->fail();
+            $this->fail($th);
+            Log::error($th);
         }
-        Storage::disk('local')->deleteDirectory($directory);
+
     }
 }

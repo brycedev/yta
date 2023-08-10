@@ -78,21 +78,21 @@ class ChannelController extends Controller
 
     public function refresh()
     {
-        $channel = Auth::user()->podcast;
+        $channel = Auth::user()->channel;
         $channel->getFreshVideos();
         return to_route('dashboard');
     }
 
     public function update(Request $request)
     {
-        $channel = Auth::user()->podcast;
+        $channel = Auth::user()->channel;
         $channel->update($request->all());
         return to_route('dashboard');
     }
 
     public function destroy()
     {
-        $channel = Auth::user()->podcast;
+        $channel = Auth::user()->channel;
         $channel->delete();
         return to_route('dashboard');
     }
