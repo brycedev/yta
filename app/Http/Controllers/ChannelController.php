@@ -17,10 +17,11 @@ class ChannelController extends Controller
         $payload = [
             'user_id' => Auth::user()->id,
             'name' => 'YouTube Channel',
-            'url' => $request->url
+            'url' => $request->url,
+            'youtube_id' => '',
         ];
-        $channel = Channel::create($payload);
-        $videos = $channel->getVideos();
+        // $channel = Channel::create($payload);
+        // $videos = $channel->getVideos();
 
         // if(count($videos) == 0) {
         //     $channel->delete();
