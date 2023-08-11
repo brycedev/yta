@@ -52,11 +52,8 @@ class SyncVideo implements ShouldQueue
             $youtube_dl_command = "youtube-dl -x --audio-format wav --output {$youtube_dl_video_path} https://youtube.com/watch?v={$this->sync->guid}";
             $youtube_dl_process = Process::timeout(600)->run($youtube_dl_command);
             Log::info($youtube_dl_command);
-            $ffmpeg_command = "ffmpeg -i {$youtube_dl_video_path} -c copy -map 0:a {$absolute_audio_path} -y";
-            Log::info($ffmpeg_command);
-            $ffmpeg_process = Process::timeout(600)->run($ffmpeg_command);
             if($this->sync->image == "") {
-                Process::run("ffmpeg -i {$absolute_audio_path} -an -vcodec copy {$absolute_image_path}");
+                // Process::run("ffmpeg -i {$absolute_audio_path} -an -vcodec copy {$absolute_image_path}");
             } else {
                 Storage::disk('local')->put($image_path, Http::get($this->sync->image)->body());
             }
