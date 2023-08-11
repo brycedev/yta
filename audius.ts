@@ -87,7 +87,7 @@ try {
                 ? data.description.substring(0, 1000)
                 : "",
             title: data.title || "",
-            genre: Genre.PODCASTS,
+            genre: Genre.ELECTRONIC,
             // tags: data.tags,
             releaseDate: new Date(data.date),
         },
