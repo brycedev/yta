@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Jobs\SyncVideo;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 
@@ -16,13 +16,15 @@ class ChannelController extends Controller
 {
     public function verify(Request $request)
     {
-
+        $link_check = Http::get($request->url);
+        if($link_check->status() === 404 || !str_contains($request->url, 'youtube.com/')) {
+            return back()->withErrors(['url' => "This doesn't appear to be a valid channel. Please try again."]);
+        }
         return to_route('dashboard');
     }
 
     public function store(Request $request)
     {
-
         try {
             $verify_script_path = base_path('verify.js');
             $command = "node {$verify_script_path} ";
@@ -32,12 +34,14 @@ class ChannelController extends Controller
             $process = Process::timeout(120)->run($command);
             $output = $process->output();
             Log::info($output);
-            if($process->successful()) {
+            $data = json_decode($output);
+            $is_staging = (config('app.audius_env') === 'staging' && config('app.env') === 'production');
+            if($process->successful() || $is_staging) {
                 $payload = [
                     'user_id' => Auth::user()->id,
-                    'name' => 'YouTube Channel',
+                    'name' => $data->name,
                     'url' => $request->url,
-                    'youtube_id' => json_decode($output)->id
+                    'youtube_id' => $data->id
                 ];
                 $channel = Channel::create($payload);
                 $videos = $channel->getVideos();
@@ -69,9 +73,6 @@ class ChannelController extends Controller
             Log::error($th);
             return to_route('dashboard')->withErrors(['url' => "We couldn't verify that you own this channel. Please try again."]);
         }
-
-
-
 
         return to_route('dashboard');
     }

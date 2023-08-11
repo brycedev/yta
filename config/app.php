@@ -61,6 +61,8 @@ return [
 
     'audius_url' => env('AUDIUS_URL'),
 
+    'audius_env' => env('AUDIUS_ENV', 'staging'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

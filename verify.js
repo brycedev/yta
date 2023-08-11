@@ -16,6 +16,7 @@ async function verifyChannel(params) {
     const { handle, channel } = params;
     let id = "";
     let audiuslinks = [];
+    let nameTexts = [];
     try {
         const browser = await puppeteer.launch({
             // headless: "new",
@@ -37,6 +38,9 @@ async function verifyChannel(params) {
                 id = href.split("=")[1];
             }
         });
+        $("#text-container.ytd-channel-name").each((i, text) => {
+            nameTexts.push($(text).text().trim());
+        });
         if (audiuslinks.length) {
             const link = audiuslinks[0];
             const page = await browser.newPage();
@@ -45,15 +49,31 @@ async function verifyChannel(params) {
             });
             browser.close();
             if (`https://audius.co/${handle}` == page.url()) {
-                console.log(JSON.stringify({ id: id }));
+                console.log(
+                    JSON.stringify({ id: id, name: nameTexts[0], owner: true })
+                );
                 process.exit(0);
             } else {
-                console.log("Incorrect Audius link in profile");
+                console.log(
+                    JSON.stringify({
+                        id: id,
+                        name: nameTexts[0],
+                        owner: false,
+                        error: "Incorrect Audius link in profile",
+                    })
+                );
                 process.exit(1);
             }
         } else {
             browser.close();
-            console.log("No Audius link in profile");
+            console.log(
+                JSON.stringify({
+                    id: id,
+                    name: nameTexts[0],
+                    owner: false,
+                    error: "No Audius link in profile",
+                })
+            );
             process.exit(1);
         }
     } catch (error) {
