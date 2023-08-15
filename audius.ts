@@ -23,9 +23,9 @@ const apiKey = process.env.AUDIUS_API_KEY || "";
 const apiSecret = process.env.AUDIUS_API_SECRET || "";
 const audiusEnv = process.env.AUDIUS_ENV || "staging";
 
-let appName = "AudiusCast_Staging";
+let appName = "YoutubeToAudius_Staging";
 if (audiusEnv === "production") {
-    appName = "AudiusCast";
+    appName = "YoutubeToAudius";
 }
 
 const userId = process.argv[3];
