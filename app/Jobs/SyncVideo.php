@@ -69,12 +69,18 @@ class SyncVideo implements ShouldQueue
             $process = Process::timeout(600)->run($command);
             Log::info($process->output());
             if($process->successful()) {
-                $this->sync->update(['status' => 'synced', 'audius_url' => $process->output()]);
-                $this->sync->channel->updateVideo($this->sync->guid, ['status' => 'synced', 'audius_url' => $process->output()]);
-
+                $this->sync->update([
+                    'status' => 'synced',
+                    'audius_url' => config('app.audius_url') . $process->output()
+                ]);
+                $this->sync->channel->updateVideo($this->sync->guid, [
+                    'status' => 'synced',
+                    'audius_url' => config('app.audius_url') . $process->output()
+                ]);
                 if(!$this->sync->channel->initial_sync_date) {
                     $this->sync->channel->initial_sync_date = Carbon::parse($video['date']);
                 }
+                $this->sync->channel->save();
             }
             if($process->failed()) {
                 Log::error($process->output());

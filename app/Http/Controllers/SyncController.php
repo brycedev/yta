@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Sync;
-use Illuminate\Support\Facades\Log;
 use App\Jobs\SyncVideo;
 
 class SyncController extends Controller
@@ -26,13 +25,14 @@ class SyncController extends Controller
                 'status' => 'queued',
                 'automated' => false
             ]);
+            $sync->channel->updateVideo($sync->guid, [
+                'status' => 'queued'
+            ]);
         }
 
-        $sync->channel->updateVideo($sync->guid, [
-            'status' => 'queued'
-        ]);
-
-        dispatch(new SyncVideo($sync));
+        if($sync) {
+            dispatch(new SyncVideo($sync));
+        }
 
         return to_route('dashboard');
     }
@@ -55,6 +55,9 @@ class SyncController extends Controller
                         'automated' => true
                     ]);
                     dispatch(new SyncVideo($sync));
+                    $channel->updateVideo($sync->guid, [
+                        'status' => 'queued'
+                    ]);
                 }
             }
         }

@@ -10,17 +10,11 @@ class Sync extends Model
 {
     use HasFactory;
 
-    protected $appends = ['audius_url', 'synced_at'];
+    protected $appends = ['synced_at'];
     protected $casts = [
         'automated' => 'boolean',
     ];
     protected $guarded = [];
-
-    public function getAudiusUrlAttribute()
-    {
-        $audius_host = config('app.audius_url');
-        return "{$audius_host}{$this->attributes['audius_url']}";
-    }
 
     public function getSyncedAtAttribute()
     {
