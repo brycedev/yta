@@ -71,7 +71,7 @@
                         </path>
                         <foreignObject width="316" height="684" transform="translate(24 24)"
                             clip-path="url(#2ade4387-9c63-4fc4-b754-10e687a0d332)">
-                            <img src="/mobile.png" alt="">
+                            <img src="/images/mobile.png" alt="">
                         </foreignObject>
                     </svg>
                 </div>
