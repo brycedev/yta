@@ -31,10 +31,10 @@ class Channel extends Model
     public function getFreshVideos()
     {
         $entries = [];
-        $path = storage_path('app/youtubes/' . $this->youtube_id . '/%(upload_date)s');
+        $path = storage_path('app/youtubes/' . $this->youtube_id . '/%(upload_date)s%(id)s');
         $command = config('app.ytdl_path') . " --verbose --write-info-json --skip-download -o '" . $path . "' https://www.youtube.com/channel/" . $this->youtube_id;
         Process::timeout(120)->run($command);
-        File::delete(storage_path('app/youtubes/' . $this->youtube_id . '/NA.info.json'));
+        File::delete(storage_path('app/youtubes/' . $this->youtube_id . '/NA' . $this->youtube_id . '.info.json'));
         $files = Storage::disk('local')->files('youtubes/' . $this->youtube_id);
         foreach (array_reverse($files) as $file) {
             $json = Storage::disk('local')->get($file);
