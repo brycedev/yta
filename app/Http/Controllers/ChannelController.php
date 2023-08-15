@@ -14,6 +14,17 @@ use Illuminate\Support\Facades\Process;
 
 class ChannelController extends Controller
 {
+    public function fetch(Request $request)
+    {
+        $channel = Auth::user()->channel;
+        if($channel) {
+            $channel->getFreshVideos();
+            $channel->has_initial_fetch = true;
+            $channel->save();
+        }
+        return to_route('dashboard');
+    }
+
     public function verify(Request $request)
     {
         $link_check = Http::get($request->url);
@@ -43,29 +54,7 @@ class ChannelController extends Controller
                     'url' => $request->url,
                     'youtube_id' => $data->id
                 ];
-                $channel = Channel::create($payload);
-                $videos = $channel->getVideos();
-
-                if(count($videos) !== 0) {
-                    $video = $videos[0];
-
-                    $channel->initial_sync_date = Carbon::parse($video['date']);
-                    $channel->save();
-
-                    $sync = Sync::create([
-                        'user_id' => Auth::user()->id,
-                        'channel_id' => $channel->id,
-                        'title' => $video['title'],
-                        'image' => $video['image'],
-                        'source' => $video['source'],
-                        'guid' => $video['guid'],
-                        'status' => 'queued'
-                    ]);
-                    $sync->channel->getFreshVideos();
-
-                    dispatch(new SyncVideo($sync));
-                }
-
+                Channel::create($payload);
                 return to_route('dashboard');
             }
             return back()->withErrors(['url' => "We couldn't verify that you own this channel. Please try again."]);
@@ -79,8 +68,6 @@ class ChannelController extends Controller
 
     public function refresh()
     {
-        $channel = Auth::user()->channel;
-        $channel->getFreshVideos();
         return to_route('dashboard');
     }
 

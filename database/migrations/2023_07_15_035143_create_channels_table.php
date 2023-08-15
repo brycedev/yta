@@ -14,6 +14,7 @@ return new class () extends Migration {
             $table->id();
             $table->integer('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->boolean('auto_sync')->default(false);
+            $table->boolean('has_initial_fetch')->default(false);
             $table->string('youtube_id');
             $table->string('name');
             $table->string('url');

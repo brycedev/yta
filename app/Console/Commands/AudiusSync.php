@@ -33,7 +33,7 @@ class AudiusSync extends Command
             ->where('synced_at', '<=', Carbon::now()->subHours(4)->toDateTimeString())->get();
 
         foreach ($channels as $channel) {
-            $video = $channel->getFreshVideos();
+            $video = $channel->videos;
             foreach ($video as $video) {
                 $sync = Sync::where('guid', $video['guid'])->where('user_id', $channel->user->id)->first();
                 if(!$sync && Carbon::parse($video['date']) > Carbon::parse($channel->initial_sync_date)) {

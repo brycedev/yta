@@ -63,6 +63,8 @@ return [
 
     'audius_env' => env('AUDIUS_ENV', 'staging'),
 
+    'ytdl_path' => env('YOUTUBE_DL_PATH', '/opt/homebrew/bin/yt-dlp'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

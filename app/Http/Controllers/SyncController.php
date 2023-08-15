@@ -28,9 +28,11 @@ class SyncController extends Controller
             ]);
         }
 
-        dispatch(new SyncVideo($sync));
+        $sync->channel->updateVideo($sync->guid, [
+            'status' => 'queued'
+        ]);
 
-        $sync->channel->getFreshVideos();
+        dispatch(new SyncVideo($sync));
 
         return to_route('dashboard');
     }
@@ -39,19 +41,21 @@ class SyncController extends Controller
     {
         $channel = Auth::user()->channel;
         $episodes = $channel->items;
-        foreach($episodes as $episode) {
-            $sync = Sync::where('guid', $episode['guid'])->where('user_id', Auth::user()->id)->first();
-            if(!$sync) {
-                $sync = Sync::create([
-                    'user_id' => Auth::user()->id,
-                    'channel_id' => $channel->id,
-                    'title' => $episode['title'],
-                    'image' => $episode['image'],
-                    'guid' => $episode['guid'],
-                    'status' => 'queued',
-                    'automated' => true
-                ]);
-                dispatch(new SyncVideo($sync));
+        if($episodes && count($episodes) > 0) {
+            foreach($episodes as $episode) {
+                $sync = Sync::where('guid', $episode['guid'])->where('user_id', Auth::user()->id)->first();
+                if(!$sync) {
+                    $sync = Sync::create([
+                        'user_id' => Auth::user()->id,
+                        'channel_id' => $channel->id,
+                        'title' => $episode['title'],
+                        'image' => $episode['image'],
+                        'guid' => $episode['guid'],
+                        'status' => 'queued',
+                        'automated' => true
+                    ]);
+                    dispatch(new SyncVideo($sync));
+                }
             }
         }
         return to_route('dashboard');

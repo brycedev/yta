@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use Carbon\Carbon;
 use App\Models\Sync;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -40,20 +41,18 @@ class SyncVideo implements ShouldQueue
                 "image" => $video['image'],
             ]));
             $directory = "syncs/{$this->sync->id}";
-            $audio_path = "{$directory}/audio.wav";
             $video_audio_path = "{$directory}/video.wav";
-            $absolute_audio_path = storage_path("app/{$audio_path}");
             $image_path = "{$directory}/image.jpg";
             $absolute_image_path = storage_path("app/{$image_path}");
             Storage::disk('local')->makeDirectory($directory);
             $this->sync->update(['status' => 'syncing']);
-            $this->sync->channel->getFreshVideos();
+            $this->sync->channel->updateVideo($this->sync->guid, ['status' => 'syncing']);
             $youtube_dl_video_path = storage_path("app/{$directory}/video");
             $youtube_dl_command = "yt-dlp -x --audio-format wav --output {$youtube_dl_video_path} https://youtube.com/watch?v={$this->sync->guid}";
-            $youtube_dl_process = Process::timeout(600)->run($youtube_dl_command);
+            Process::timeout(600)->run($youtube_dl_command);
             Log::info($youtube_dl_command);
             if($this->sync->image == "") {
-                // Process::run("ffmpeg -i {$absolute_audio_path} -an -vcodec copy {$absolute_image_path}");
+
             } else {
                 Storage::disk('local')->put($image_path, Http::get($this->sync->image)->body());
             }
@@ -66,28 +65,30 @@ class SyncVideo implements ShouldQueue
             if(File::exists($absolute_image_path)) {
                 $command.= "--image {$absolute_image_path} ";
             }
-
             Log::info($command);
             $process = Process::timeout(600)->run($command);
             Log::info($process->output());
             if($process->successful()) {
                 $this->sync->update(['status' => 'synced', 'audius_url' => $process->output()]);
-                $this->sync->channel->getFreshVideos();
+                $this->sync->channel->updateVideo($this->sync->guid, ['status' => 'synced', 'audius_url' => $process->output()]);
+
+                if(!$this->sync->channel->initial_sync_date) {
+                    $this->sync->channel->initial_sync_date = Carbon::parse($video['date']);
+                }
             }
             if($process->failed()) {
                 Log::error($process->output());
                 Log::error($process->errorOutput());
                 $this->sync->update(['status' => 'failed']);
-                $this->sync->channel->getFreshVideos();
+                $this->sync->channel->updateVideo($this->sync->guid, ['status' => 'failed']);
                 $this->fail();
             }
             Storage::disk('local')->deleteDirectory($directory);
         } catch (\Throwable $th) {
             $this->sync->update(['status' => 'failed']);
-            $this->sync->channel->getFreshVideos();
+            $this->sync->channel->updateVideo($this->sync->guid, ['status' => 'failed']);
             $this->fail($th);
             Log::error($th);
         }
-
     }
 }

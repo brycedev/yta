@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('audius:sync')->everyMinute();
+        $schedule->command('audius:sync')->everyFifteenMinutes();
+        $schedule->command('youtube:refresh')->twiceDaily(1, 13);
     }
 
     /**

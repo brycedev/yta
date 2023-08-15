@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, usePage } from "@inertiajs/react";
 import { router, useForm } from "@inertiajs/react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { ArrowRightIcon, Cog8ToothIcon } from "@heroicons/react/20/solid";
 import { Menu, Transition, Switch } from "@headlessui/react";
@@ -63,7 +63,25 @@ export default function Dashboard({ auth, channel, syncs }) {
     const { errors } = usePage().props;
     const [step, setStep] = useState(1);
     const [verifying, setVerifying] = useState(false);
+    const [fetchingYoutubeVideos, setFetchingYoutubeVideos] = useState(false);
     const hasChannel = typeof channel !== "undefined" && channel !== null;
+    useEffect(() => {
+        if (hasChannel && !channel.has_initial_fetch) {
+            setStep(3);
+            fetchYoutubeVideos();
+        }
+    });
+    function fetchYoutubeVideos() {
+        if (fetchingYoutubeVideos) {
+            return;
+        }
+        setFetchingYoutubeVideos(true);
+        router.get("/channels/fetch", {
+            onSuccess: () => {
+                setFetchingYoutubeVideos(false);
+            },
+        });
+    }
     function submitChannelForm(e) {
         e.preventDefault();
         post("/channels/verify", {
@@ -77,9 +95,18 @@ export default function Dashboard({ auth, channel, syncs }) {
             return;
         }
         setVerifying(true);
-        router.post("/channels", {
-            url: data.url,
-        });
+        router.post(
+            "/channels",
+            {
+                url: data.url,
+            },
+            {
+                onSuccess: () => {
+                    setStep(3);
+                    fetchYoutubeVideos();
+                },
+            }
+        );
         setVerifying(false);
     }
     function refreshFeed(e) {
@@ -123,7 +150,7 @@ export default function Dashboard({ auth, channel, syncs }) {
 
             <main className="lg:pl-72 h-screen">
                 <div className="xl:pr-72">
-                    {!hasChannel && (
+                    {(!hasChannel || !channel.has_initial_fetch) && (
                         <>
                             <div className="h-screen">
                                 <div className="flex flex-col items-center justify-center h-full">
@@ -139,6 +166,11 @@ export default function Dashboard({ auth, channel, syncs }) {
                                                     <span>
                                                         Great! Confirm your
                                                         account
+                                                    </span>
+                                                )}
+                                                {step == 3 && (
+                                                    <span>
+                                                        Retrieving your videos
                                                     </span>
                                                 )}
                                             </h2>
@@ -173,6 +205,14 @@ export default function Dashboard({ auth, channel, syncs }) {
                                                             Need help?{" "}
                                                         </a>
                                                     </>
+                                                )}
+                                                {step == 3 && (
+                                                    <span>
+                                                        Please wait while we
+                                                        fetch your videos from
+                                                        YouTube. This may take a
+                                                        minute or two.
+                                                    </span>
                                                 )}
                                             </p>
                                             {step == 1 && (
@@ -233,13 +273,16 @@ export default function Dashboard({ auth, channel, syncs }) {
                                                     </p>
                                                 </>
                                             )}
+                                            {step == 3 && (
+                                                <span className="loader mt-4 mx-auto"></span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </>
                     )}
-                    {hasChannel && (
+                    {hasChannel && channel.has_initial_fetch && (
                         <div className="">
                             {/* Page title & actions */}
                             <div className="border-gray-200 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6 lg:px-8">
