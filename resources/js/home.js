@@ -17,7 +17,6 @@ if (import.meta.env.VITE_AUDIUS_ENV === "production") {
 let sdkConfig = {
     appName: appName,
     apiKey: import.meta.env.VITE_AUDIUS_API_KEY,
-    apiSecret: "",
 };
 if (import.meta.env.VITE_AUDIUS_ENV === "staging") {
     sdkConfig.services = {
