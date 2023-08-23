@@ -20,7 +20,7 @@
         "vite": "^4.0.0"
     },
     "dependencies": {
-        "@audius/sdk": "^3.0.5",
+        "@audius/sdk": "^3.0.6",
         "@heroicons/react": "^2.0.18",
         "@remotion/bundler": "^4.0.6",
         "cheerio": "^1.0.0-rc.12",
