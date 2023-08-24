@@ -74,7 +74,6 @@ if (audiusEnv === "staging") {
 const audiusSdk = sdk(sdkConfig);
 
 try {
-    console.log(audiusSdk);
     const uploadTrackRequest: UploadTrackRequest = {
         userId: userId,
         coverArtFile: {
@@ -98,7 +97,6 @@ try {
             name: "my track file",
         },
     };
-    console.log(uploadTrackRequest);
     const result = await audiusSdk.tracks.uploadTrack(uploadTrackRequest);
 
     const track = await audiusSdk.tracks.getTrack({
