@@ -99,6 +99,8 @@ try {
     };
     const result = await audiusSdk.tracks.uploadTrack(uploadTrackRequest);
 
+    console.log(result);
+
     // const track = await audiusSdk.tracks.getTrack({
     //     trackId: result.trackId.toString(),
     // });
